@@ -1,0 +1,42 @@
+{
+  "name": "@saidic/server",
+  "version": "0.1.0",
+  "description": "Saidic for a business's own Node server: mint a signed-in customer's token, verify webhooks, manage customers. The secret and the key never leave the server.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saidic-official/sdk.git",
+    "directory": "packages/server"
+  },
+  "homepage": "https://docs.saidic.com",
+  "bugs": {
+    "url": "https://github.com/saidic-official/sdk/issues"
+  },
+  "type": "module",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p . && tsc -p tsconfig.cjs.json && node ../../scripts/mark-cjs.mjs dist/cjs",
+    "test": "node --test test/*.test.mjs"
+  }
+}

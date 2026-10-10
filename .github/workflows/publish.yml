@@ -1,0 +1,50 @@
+# PUBLISHING @saidic/sdk AND @saidic/server TO NPM, on a release tag only.
+#
+#   v0.1.0             publishes both packages at 0.1.0, with provenance
+#   v0.1.0-rehearsal   the same steps with npm's dry run: nothing is published
+#
+# The tag must name the version both package.json files carry (scripts/tag-matches.mjs);
+# every check the SDK's own pipeline runs (ci/before-build.sh) passes first. The npm
+# token is the repository's NPM_TOKEN secret; provenance needs the id-token permission.
+name: publish
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: The tag names both packages' version
+        run: node scripts/tag-matches.mjs "$GITHUB_REF_NAME"
+
+      - name: Every check before a build
+        run: bash ci/before-build.sh
+
+      - name: Publish @saidic/sdk and @saidic/server
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          dry=""
+          case "$GITHUB_REF_NAME" in *-rehearsal*) dry="--dry-run" ;; esac
+          for package in sdk server; do
+            (cd "packages/$package" && npm publish --provenance --access public $dry)
+          done

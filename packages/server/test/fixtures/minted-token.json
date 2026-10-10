@@ -1,0 +1,16 @@
+{
+  "$comment": "A token @saidic/server's mintToken made, recorded once (Reviewer 2's LOW f, section 52.8): the backend's own test verifies it with the real verifier, with the time held at iat + 60 and this secret stored for business 7 under key fx000001. A fixture secret, used nowhere else.",
+  "secret": "saidic-fixture-secret-do-not-use",
+  "key_id": "fx000001",
+  "business_id": 7,
+  "iat": 1791600000,
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImZ4MDAwMDAxIn0.eyJhdWQiOiI3Iiwic3ViIjoiY3VzdC00MiIsImlhdCI6MTc5MTYwMDAwMCwiZXhwIjoxNzkxNjAzNjAwLCJqdGkiOiJiM2Y3MTdkYi1kYWFmLTQ2YWEtYTUyYy1iMTRhMGYzZGNlYjIiLCJlbWFpbCI6ImFkYUBleGFtcGxlLmNvbSIsIm5hbWUiOiJBZGEiLCJwaG9uZSI6IisyMzQ4MDMxMjM0NTY3IiwiZmFjdHMiOnsicGxhbiI6ImdvbGQifX0.w0QtDZ1hLj2s5S6MydZv5Pipm8q4Lsn1MYi4L7dbvUE",
+  "claims": {
+    "aud": "7",
+    "sub": "cust-42",
+    "email": "ada@example.com",
+    "name": "Ada",
+    "phone": "+2348031234567",
+    "facts": { "plan": "gold" }
+  }
+}

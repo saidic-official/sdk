@@ -1,0 +1,39 @@
+# The SDK's pipeline: every check of ci/before-build.sh, on a push to main and on a pull
+# request. It runs in the official repository (saidic-official/sdk), whose root is this
+# folder (infra/publish/publish.sh). Nothing is built for a server and nothing deployed:
+# the packages go to npm from publish.yml, on a release tag alone.
+#
+# A push that changes only documentation runs nothing. A newer push cancels one that is
+# still checking.
+
+name: SDK
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Every check before a build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: sdk-check-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+
+      - name: ci/before-build.sh
+        run: bash ci/before-build.sh
