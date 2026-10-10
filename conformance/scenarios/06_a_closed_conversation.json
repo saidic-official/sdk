@@ -1,0 +1,57 @@
+{
+  "name": "A closed conversation takes nothing more",
+  "says": "The customer closes the conversation: conversation.closed arrives, and a send answers conversation_closed.",
+  "steps": [
+    {
+      "op": "init"
+    },
+    {
+      "op": "start",
+      "args": {
+        "text": "Thank you, that is all"
+      },
+      "save": {
+        "conversation": "conversation_id"
+      }
+    },
+    {
+      "op": "open",
+      "args": {
+        "conversation_id": "$conversation"
+      }
+    },
+    {
+      "expect_event": {
+        "type": "message.created",
+        "message.text": "Thank you, that is all"
+      }
+    },
+    {
+      "op": "close",
+      "args": {
+        "conversation_id": "$conversation"
+      },
+      "expect_result": {
+        "status": "closed"
+      }
+    },
+    {
+      "expect_event": {
+        "type": "conversation.closed"
+      }
+    },
+    {
+      "op": "send",
+      "args": {
+        "conversation_id": "$conversation",
+        "text": "Late"
+      },
+      "expect_error": {
+        "code": "conversation_closed"
+      }
+    },
+    {
+      "op": "shutdown"
+    }
+  ]
+}

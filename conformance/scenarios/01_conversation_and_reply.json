@@ -1,0 +1,18 @@
+{
+  "name": "A conversation, its reply and an idempotent send",
+  "says": "The customer starts a conversation with a first message and follows it; the assistant's reply arrives as message.created with conversation.status replied; a send repeated with the same Idempotency-Key is one message; the history holds them in seq order.",
+  "steps": [
+    {"op": "init"},
+    {"op": "start", "args": {"text": "Hello"}, "save": {"conversation": "conversation_id"}},
+    {"op": "open", "args": {"conversation_id": "$conversation"}},
+    {"expect_event": {"type": "message.created", "message.from": "customer", "message.text": "Hello"}},
+    {"server": "assistant_replies", "args": {"conversation_id": "$conversation", "text": "Hi, how can I help?"}},
+    {"expect_event": {"type": "message.created", "message.from": "assistant", "message.text": "Hi, how can I help?"}},
+    {"expect_event": {"type": "conversation.status", "status": "replied"}},
+    {"op": "send", "args": {"conversation_id": "$conversation", "text": "Where is my order?", "idempotency_key": "conf-1"}, "save": {"sent": "id"}},
+    {"op": "send", "args": {"conversation_id": "$conversation", "text": "Where is my order?", "idempotency_key": "conf-1"}, "expect_result": {"id": "$sent"}},
+    {"op": "history", "args": {"conversation_id": "$conversation"}, "expect_result": {"messages.length": 3, "messages.2.text": "Where is my order?"}},
+    {"expect_no_duplicates": true},
+    {"op": "shutdown"}
+  ]
+}

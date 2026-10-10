@@ -1,0 +1,15 @@
+{
+  "name": "Resume from the last seq after a lost socket",
+  "says": "The socket is lost; a reply stored meanwhile arrives once when the SDK opens again and subscribes from the last seq it holds.",
+  "steps": [
+    {"op": "init"},
+    {"op": "start", "args": {"text": "Are you there?"}, "save": {"conversation": "conversation_id"}},
+    {"op": "open", "args": {"conversation_id": "$conversation"}},
+    {"expect_event": {"type": "message.created", "message.from": "customer"}},
+    {"op": "drop_socket"},
+    {"server": "assistant_replies", "args": {"conversation_id": "$conversation", "text": "Yes, here."}},
+    {"expect_event": {"type": "message.created", "message.from": "assistant", "message.text": "Yes, here."}, "within": 20},
+    {"expect_no_duplicates": true},
+    {"op": "shutdown"}
+  ]
+}
