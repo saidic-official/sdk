@@ -18,10 +18,20 @@ const MOST_SUBSCRIBED = 20;
 // How many message ids are remembered per conversation to drop a second copy.
 const IDS_REMEMBERED = 500;
 
-// The close codes of the app socket (protocol v1): the token refused (its reason is the
-// close's), and too many sockets of this customer open at once.
+// THE APP SOCKET'S REFUSALS (protocol v1, 51.6 as amended): the server accepts, then
+// closes with a code in the 4000s and a one-word reason. 4401 the token refused (the
+// verifier's reason), 4404 the API not open to the business, 4429 too_many_uses. Every
+// one is final but 4401 expired, which asks the app for a token once; a 4xxx this version
+// does not know is final too. Any other close, and a failed handshake, is the network:
+// it opens again, later each time.
 const TOKEN_REFUSED = 4401;
-const TOO_MANY_SOCKETS = 4429;
+const FINAL_CODES: Record<number, string> = {
+  4401: 'unauthorized',
+  4404: 'not_open',
+  4429: 'too_many_uses',
+};
+// Before the next page of a catch-up: the server answers one a second at most.
+const NEXT_PAGE_MS = 1000;
 const OPEN = 1;
 
 const KNOWN: EventName[] = [
@@ -48,6 +58,7 @@ export class Connection {
   private ping: ReturnType<typeof setInterval> | null = null;
   private retry: ReturnType<typeof setTimeout> | null = null;
   private retryIn = FIRST_RETRY_MS;
+  private readonly pages = new Set<ReturnType<typeof setTimeout>>();
   private refreshed = false;
   private closedByApp = false;
   private current: ConnectionState = 'connecting';
@@ -57,7 +68,9 @@ export class Connection {
     private readonly tokens: Tokens,
     private readonly Socket: SocketClass,
     // Told when the socket opens: the client's queue then flushes.
-    private readonly onOpen: () => void
+    private readonly onOpen: () => void,
+    // Told when it is closed for good, by the app or by a refusal.
+    private readonly onEnd: () => void = () => {}
   ) {
     void this.open();
     const platform = globalThis as { addEventListener?: (name: string, fn: () => void) => void };
@@ -107,6 +120,7 @@ export class Connection {
     this.socket?.close(1000);
     this.socket = null;
     this.setState('closed');
+    this.onEnd();
   }
 
   private async open(): Promise<void> {
@@ -157,11 +171,17 @@ export class Connection {
           );
           return;
         }
-        this.giveUp('unauthorized', `The token was refused: ${event.reason || 'refused'}.`);
-        return;
       }
-      if (event.code === TOO_MANY_SOCKETS) {
-        this.giveUp('too_many_sockets', 'This customer has too many connections open.');
+      if (event.code >= 4000 && event.code < 5000) {
+        const reason = event.reason || 'refused';
+        this.giveUp(
+          FINAL_CODES[event.code] ?? 'refused',
+          `The connection was refused: ${reason}.`,
+          {
+            reason,
+            close_code: event.code,
+          }
+        );
         return;
       }
       this.again();
@@ -183,9 +203,20 @@ export class Connection {
     void this.open();
   };
 
-  private giveUp(code: string, message: string): void {
+  // Final: closed, said to the handlers, and nothing left listening.
+  private giveUp(
+    code: string,
+    message: string,
+    more: { reason?: string; close_code?: number } = {}
+  ): void {
+    this.stopTimers();
+    const platform = globalThis as {
+      removeEventListener?: (name: string, fn: () => void) => void;
+    };
+    platform.removeEventListener?.('online', this.backOnline);
     this.setState('closed');
-    this.emit('error', { code, message });
+    this.emit('error', { code, message, ...more });
+    this.onEnd();
   }
 
   private receive(data: unknown): void {
@@ -202,7 +233,16 @@ export class Connection {
       [...messages].sort((a, b) => a.seq - b.seq).forEach(message => this.deliver(id, message));
       if (frame.control) this.controlIs(id, frame.control as Control);
       // More was stored than one answer holds: ask for the rest.
-      if (frame.has_more === true) this.sendSubscribe([id]);
+      if (frame.has_more === true) {
+        const page = setTimeout(
+          () => {
+            this.pages.delete(page);
+            this.sendSubscribe([id]);
+          },
+          NEXT_PAGE_MS + Math.random() * 500
+        );
+        this.pages.add(page);
+      }
       return;
     }
     if (type === 'message.created') {
@@ -301,6 +341,8 @@ export class Connection {
   private stopTimers(): void {
     if (this.ping) clearInterval(this.ping);
     if (this.retry) clearTimeout(this.retry);
+    this.pages.forEach(page => clearTimeout(page));
+    this.pages.clear();
     this.ping = null;
     this.retry = null;
   }

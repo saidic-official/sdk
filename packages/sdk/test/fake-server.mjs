@@ -21,6 +21,8 @@ export const startFake = async (options = {}) => {
     // 'unavailable', 502 as a gateway's page.
     statusNext: [],
     mostSockets: options.mostSockets ?? 8,
+    // Close every new socket with this [code, reason] after the handshake.
+    closeWith: null,
     nextId: 1,
     nextSeq: 100,
   };
@@ -149,7 +151,8 @@ export const startFake = async (options = {}) => {
     const token = (offered.find(one => one.startsWith('saidic.token.')) || '').slice(13);
     if (state.expired.has(token)) return socket.close(4401, 'expired');
     if (!state.good.has(token)) return socket.close(4401, 'bad_signature');
-    if (state.sockets.size >= state.mostSockets) return socket.close(4429, 'too_many_sockets');
+    if (state.sockets.size >= state.mostSockets) return socket.close(4429, 'too_many_uses');
+    if (state.closeWith) return socket.close(...state.closeWith);
     state.sockets.add(socket);
     socket.on('close', () => state.sockets.delete(socket));
     socket.on('message', raw => {

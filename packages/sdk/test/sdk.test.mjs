@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import WebSocket from 'ws';
-import { Saidic, SaidicError } from '../dist/index.js';
+import { Saidic, SaidicError } from '../dist/esm/index.js';
 import { startFake, until } from './fake-server.mjs';
 
 const client = (fake, more = {}) =>
@@ -20,15 +20,15 @@ test('a conversation is started, a message sent and listed; the token goes in th
     const sent = await saidic.messages.send(conversation.id, 'Where is my order?');
     assert.equal(sent.from, 'customer');
     assert.equal(sent.status, 'accepted');
-    const { messages, hasMore } = await saidic.messages.list(conversation.id, { after: 0 });
+    const { messages, has_more } = await saidic.messages.list(conversation.id, { after: 0 });
     assert.deepEqual(
       messages.map(m => m.text),
       ['Hello', 'Where is my order?']
     );
-    assert.equal(hasMore, false);
+    assert.equal(has_more, false);
     const page = await saidic.conversations.list();
-    assert.equal(page.items[0].id, conversation.id);
-    assert.equal(page.next, null);
+    assert.equal(page.conversations[0].id, conversation.id);
+    assert.equal(page.next_cursor, null);
     await saidic.conversations.requestPerson(conversation.id);
     const closed = await saidic.conversations.close(conversation.id);
     assert.equal(closed.status, 'closed');
@@ -194,7 +194,7 @@ test('the token expired on the socket: one new token, and open again', async () 
   }
 });
 
-test('refused for good: a bad token, or too many sockets, closes with an error', async () => {
+test('refused for good: a bad token, or too many uses, closes with an error', async () => {
   const fake = await startFake({ tokens: ['tok-1'], mostSockets: 1 });
   try {
     const bad = Saidic.create({ token: 'tok-forged', baseUrl: fake.base, WebSocket });
@@ -203,14 +203,15 @@ test('refused for good: a bad token, or too many sockets, closes with an error',
     refused.on('error', error => errors.push(error.code));
     await until(() => refused.state === 'closed');
     assert.deepEqual(errors, ['unauthorized']);
+    assert.equal(fake.state.sockets.size, 0);
 
     const one = client(fake).connect();
     await until(() => one.state === 'open');
     const two = client(fake).connect();
     const twoErrors = [];
-    two.on('error', error => twoErrors.push(error.code));
+    two.on('error', error => twoErrors.push([error.code, error.reason, error.close_code]));
     await until(() => two.state === 'closed');
-    assert.deepEqual(twoErrors, ['too_many_sockets']);
+    assert.deepEqual(twoErrors, [['too_many_uses', 'too_many_uses', 4429]]);
     one.close();
   } finally {
     await fake.stop();
@@ -264,6 +265,60 @@ test('"not now" from the server or its gateway (503, 503, 502, then 200): kept, 
       saidic.messages.send(id, 'late'),
       error => error.code === 'conversation_closed'
     );
+  } finally {
+    await fake.stop();
+  }
+});
+
+test('every close in the 4000s is final, a code the SDK does not know as well; others open again', async () => {
+  const fake = await startFake();
+  try {
+    for (const [code, reason, expected] of [
+      [4404, 'not_open', 'not_open'],
+      [4499, 'something_new', 'refused'],
+    ]) {
+      fake.state.closeWith = [code, reason];
+      const connection = client(fake).connect();
+      const errors = [];
+      connection.on('error', error => errors.push([error.code, error.reason, error.close_code]));
+      await until(() => connection.state === 'closed');
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      assert.deepEqual(errors, [[expected, reason, code]], String(code));
+      assert.equal(connection.state, 'closed', 'not opened again');
+    }
+    // A close that is not a refusal (a restart) opens again.
+    fake.state.closeWith = null;
+    const connection = client(fake).connect();
+    await until(() => connection.state === 'open');
+    fake.dropSockets();
+    await until(() => connection.state === 'reconnecting');
+    await until(() => connection.state === 'open', 5000);
+    connection.close();
+  } finally {
+    await fake.stop();
+  }
+});
+
+test('requests refused together ask the app for one new token', async () => {
+  const fake = await startFake({ tokens: ['tok-new'], expired: ['tok-old'] });
+  try {
+    let asked = 0;
+    const saidic = Saidic.create({
+      token: 'tok-old',
+      getToken: async () => {
+        asked += 1;
+        await new Promise(resolve => setTimeout(resolve, 30));
+        return 'tok-new';
+      },
+      baseUrl: fake.base,
+    });
+    const started = await Promise.all([
+      saidic.conversations.start(),
+      saidic.conversations.start(),
+      saidic.conversations.start(),
+    ]);
+    assert.equal(started.length, 3);
+    assert.equal(asked, 1);
   } finally {
     await fake.stop();
   }

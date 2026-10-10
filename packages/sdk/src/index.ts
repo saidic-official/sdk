@@ -5,8 +5,9 @@ import { Rest, Tokens, newKey } from './rest.js';
 import type {
   ClientOptions,
   Conversation,
+  ConversationPage,
   Message,
-  Page,
+  MessagePage,
   SocketClass,
   StartOptions,
 } from './types.js';
@@ -66,13 +67,13 @@ export class SaidicClient {
     get: (id: number): Promise<Conversation> =>
       this.rest.request<Conversation>({ method: 'GET', path: `/conversations/${segment(id)}` }),
     // This customer's conversations, newest first, a page at a time.
-    list: async (cursor?: string | null): Promise<Page<Conversation>> => {
+    list: async (cursor?: string | null): Promise<ConversationPage> => {
       const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : '';
-      const page = await this.rest.request<{
-        conversations: Conversation[];
-        next_cursor: string | null;
-      }>({ method: 'GET', path: `/conversations${query}` });
-      return { items: page.conversations ?? [], next: page.next_cursor ?? null };
+      const page = await this.rest.request<ConversationPage>({
+        method: 'GET',
+        path: `/conversations${query}`,
+      });
+      return { conversations: page.conversations ?? [], next_cursor: page.next_cursor ?? null };
     },
     close: (id: number): Promise<Conversation> =>
       this.rest.request<Conversation>({
@@ -104,17 +105,17 @@ export class SaidicClient {
     list: async (
       conversationId: number,
       page: { after?: number; before?: number; limit?: number } = {}
-    ): Promise<{ messages: Message[]; hasMore: boolean }> => {
+    ): Promise<MessagePage> => {
       const query = new URLSearchParams();
       if (page.after !== undefined) query.set('after', String(page.after));
       if (page.before !== undefined) query.set('before', String(page.before));
       if (page.limit !== undefined) query.set('limit', String(page.limit));
       const asked = query.toString();
-      const found = await this.rest.request<{ messages: Message[]; has_more: boolean }>({
+      const found = await this.rest.request<MessagePage>({
         method: 'GET',
         path: `/conversations/${segment(conversationId)}/messages${asked ? `?${asked}` : ''}`,
       });
-      return { messages: found.messages ?? [], hasMore: found.has_more === true };
+      return { messages: found.messages ?? [], has_more: found.has_more === true };
     },
   };
 
@@ -132,16 +133,20 @@ export class SaidicClient {
         'No WebSocket on this platform (Node before 22): pass one as the WebSocket option.'
       );
     }
-    const connection = new Connection(this.rest.base, this.tokens, Socket, () => {
-      void this.queue.flush();
-    });
+    const connection: Connection = new Connection(
+      this.rest.base,
+      this.tokens,
+      Socket,
+      () => void this.queue.flush(),
+      () => this.connections.delete(connection)
+    );
     this.connections.add(connection);
     return connection;
   }
 
   // Everything closed: the connections, and the messages still waiting are refused.
   close(): void {
-    this.connections.forEach(connection => connection.close());
+    [...this.connections].forEach(connection => connection.close());
     this.connections.clear();
     this.queue.drop(new SaidicError('closed', 'The client was closed.'));
   }

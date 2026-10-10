@@ -10,6 +10,7 @@ run() { step="$1"; shift; echo "== $step"; "$@"; }
 
 run "install the dependencies exactly as locked" npm ci --no-audit --no-fund
 run "type check" npm run type-check
+run "lint" npm run lint
 run "format" npm run format:check
 run "build both packages" npm run build
 run "unit tests against the protocol's fake" npm test

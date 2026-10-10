@@ -7,7 +7,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
-import { SaidicServer, mintToken, verifyWebhook } from '../dist/index.js';
+import { SaidicServer, mintToken, verifyWebhook } from '../dist/esm/index.js';
 
 const parts = token => {
   const [head, body, signature] = token.split('.');
@@ -161,4 +161,22 @@ test('the server client sends the key in the Authorization header alone', async 
   });
   await assert.rejects(server.customers.upsert('c', { facts: { 'no good': 'x' } }), /not a key/);
   assert.throws(() => new SaidicServer({ key: '' }), /key is required/);
+});
+
+test('the recorded fixture the backend verifies is a token of this package', async () => {
+  const { readFileSync } = await import('node:fs');
+  const fixture = JSON.parse(
+    readFileSync(new URL('./fixtures/minted-token.json', import.meta.url), 'utf8')
+  );
+  const { head, body, signature, header, claims } = parts(fixture.token);
+  assert.equal(
+    signature,
+    createHmac('sha256', fixture.secret).update(`${head}.${body}`).digest('base64url')
+  );
+  assert.equal(header.kid, fixture.key_id);
+  assert.equal(claims.iat, fixture.iat);
+  assert.equal(claims.exp - claims.iat, 3600);
+  for (const [name, value] of Object.entries(fixture.claims)) {
+    assert.deepEqual(claims[name], value, name);
+  }
 });

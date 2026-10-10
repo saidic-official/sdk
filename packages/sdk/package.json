@@ -4,14 +4,19 @@
   "description": "Saidic's client for apps: a signed-in customer's conversations with a business's assistant, in real time. Browsers, React Native and Node 18 and up.",
   "license": "MIT",
   "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
     }
   },
   "files": [
@@ -22,7 +27,7 @@
     "node": ">=18"
   },
   "scripts": {
-    "build": "rm -rf dist && tsc -p . && esbuild src/index.ts --bundle --format=cjs --platform=neutral --target=es2020 --outfile=dist/index.cjs",
+    "build": "rm -rf dist && tsc -p . && tsc -p tsconfig.cjs.json && node ../../scripts/mark-cjs.mjs dist/cjs",
     "test": "node --test test/*.test.mjs"
   }
 }

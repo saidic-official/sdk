@@ -51,6 +51,16 @@ export class Tokens {
     this.token = null;
   }
 
+  // A new token in place of the one a refused request used. Where another request has
+  // already put a new one in its place, that one is answered: requests refused together
+  // ask the app once (Reviewer 2's LOW).
+  async renewFrom(used: string): Promise<string> {
+    if (this.token && this.token !== used) return this.token;
+    if (this.asking) return this.asking;
+    this.token = null;
+    return this.fresh();
+  }
+
   // Whether a refused token can be replaced: the app gave a getToken.
   get refreshable(): boolean {
     return Boolean(this.options.getToken);
@@ -81,11 +91,11 @@ export class Rest {
   }
 
   async request<T>(ask: Ask): Promise<T> {
-    let response = await this.once(ask, await this.tokens.current());
+    const used = await this.tokens.current();
+    let response = await this.once(ask, used);
     if (response.status === 401 && this.tokens.refreshable) {
       // Refused, most often for being expired: one new token, one more try.
-      this.tokens.forget();
-      response = await this.once(ask, await this.tokens.fresh());
+      response = await this.once(ask, await this.tokens.renewFrom(used));
     }
     return this.read<T>(response);
   }

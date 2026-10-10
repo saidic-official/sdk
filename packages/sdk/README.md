@@ -36,4 +36,15 @@ connection it catches up with what was missed; handlers see each message once, i
 On Node 18 and 20, which have no WebSocket of their own, pass one:
 `Saidic.create({ getToken, WebSocket })`.
 
+**Your own message, once.** `messages.send()` answers the stored message, and the
+connection also hands it to `message.created`. Draw either: both carry the same `id`, so
+an app that keeps messages by id shows it once.
+
+**Names.** What the server sends keeps its own names, as the protocol writes them
+(`has_more`, `next_cursor`, `conversation_id`); the SDK's own methods and options are
+camelCase.
+
+**TypeScript** 5.0 or later reads the types (they use `export type *`); ES modules and
+CommonJS each get their own.
+
 Everything else: https://docs.saidic.com

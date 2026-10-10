@@ -2,6 +2,10 @@
 // 52.3's names): what the REST routes answer and what the socket sends. A field the SDK
 // does not know is kept as it came; an event type it does not know is ignored, so the
 // server may add both inside v1.
+//
+// ONE NAMING RULE: what the server sends keeps the server's names, as the protocol
+// document writes them (has_more, next_cursor, conversation_id, created_at); what is the
+// SDK's own (its methods, its options, SaidicError's fields) is camelCase.
 
 // Who wrote a message: the customer, the business's assistant, or a person of the
 // business's team who took the conversation over.
@@ -56,7 +60,14 @@ export interface Events {
   'agent.typing': { conversation_id: number; typing: boolean };
   'conversation.closed': { conversation_id: number };
   // A frame the server refused, or a conversation that is not this customer's.
-  error: { conversation_id?: number; code: string; message: string };
+  // A refused connection carries the server's one-word reason and the close code.
+  error: {
+    conversation_id?: number;
+    code: string;
+    message: string;
+    reason?: string;
+    close_code?: number;
+  };
   // The connection's own state, for an indicator of the app's.
   'connection.state': { state: ConnectionState };
 }
@@ -87,10 +98,17 @@ export interface StartOptions {
   text?: string;
 }
 
-export interface Page<T> {
-  items: T[];
-  // Asked for again with this, the next page; null at the end.
-  next: string | null;
+// A page of the customer's conversations, as the server sends it: next_cursor asks for
+// the next page, null at the end.
+export interface ConversationPage {
+  conversations: Conversation[];
+  next_cursor: string | null;
+}
+
+// Messages after a seq or before one, as the server sends them.
+export interface MessagePage {
+  messages: Message[];
+  has_more: boolean;
 }
 
 // A WebSocket class as the platform gives it (browsers, React Native, Node 22 and up),
