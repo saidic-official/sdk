@@ -1,0 +1,25 @@
+{
+  "name": "saidic-sdk-workspace",
+  "private": true,
+  "description": "Saidic's packages for developers: @saidic/sdk (browsers, React Native, Node) and @saidic/server (Node).",
+  "workspaces": [
+    "packages/sdk",
+    "packages/server"
+  ],
+  "scripts": {
+    "type-check": "tsc -p packages/sdk --noEmit && tsc -p packages/server --noEmit",
+    "build": "npm run build --workspaces",
+    "test": "npm test --workspaces",
+    "size": "node scripts/size.mjs",
+    "format": "prettier --write \"packages/*/src/**/*.ts\" \"packages/*/test/**/*.mjs\" \"scripts/**/*.mjs\"",
+    "format:check": "prettier --check \"packages/*/src/**/*.ts\" \"packages/*/test/**/*.mjs\" \"scripts/**/*.mjs\""
+  },
+  "devDependencies": {
+    "@types/node": "22.7.5",
+    "@types/ws": "8.5.12",
+    "esbuild": "0.24.0",
+    "prettier": "3.3.3",
+    "typescript": "5.6.3",
+    "ws": "8.18.0"
+  }
+}

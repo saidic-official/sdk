@@ -1,0 +1,28 @@
+{
+  "name": "@saidic/sdk",
+  "version": "0.1.0",
+  "description": "Saidic's client for apps: a signed-in customer's conversations with a business's assistant, in real time. Browsers, React Native and Node 18 and up.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p . && esbuild src/index.ts --bundle --format=cjs --platform=neutral --target=es2020 --outfile=dist/index.cjs",
+    "test": "node --test test/*.test.mjs"
+  }
+}

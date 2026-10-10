@@ -1,0 +1,28 @@
+{
+  "name": "@saidic/server",
+  "version": "0.1.0",
+  "description": "Saidic for a business's own Node server: mint a signed-in customer's token, verify webhooks, manage customers. The secret and the key never leave the server.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p . && esbuild src/index.ts --bundle --format=cjs --platform=node --target=node18 --outfile=dist/index.cjs",
+    "test": "node --test test/*.test.mjs"
+  }
+}
