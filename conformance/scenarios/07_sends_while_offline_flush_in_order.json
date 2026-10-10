@@ -1,0 +1,23 @@
+{
+  "name": "Sends made while offline go once, in order, when the network is back",
+  "says": "The network goes; the customer sends two messages, held by the SDK's queue; the network comes back: the two are taken once each, in the order sent, then the assistant's reply arrives. An SDK with no offline queue reports it as its gap.",
+  "steps": [
+    {"op": "init"},
+    {"op": "start", "args": {"text": "Before the tunnel"}, "save": {"conversation": "conversation_id"}},
+    {"op": "open", "args": {"conversation_id": "$conversation"}},
+    {"expect_event": {"type": "message.created", "message.text": "Before the tunnel"}},
+    {"op": "offline"},
+    {"op": "send", "args": {"conversation_id": "$conversation", "text": "First while offline", "idempotency_key": "offline-1"}, "await": false, "as": "first"},
+    {"op": "send", "args": {"conversation_id": "$conversation", "text": "Second while offline", "idempotency_key": "offline-2"}, "await": false, "as": "second"},
+    {"op": "online"},
+    {"await_op": "first", "expect_result": {"text": "First while offline"}, "save": {"first_seq": "seq"}},
+    {"await_op": "second", "expect_result": {"text": "Second while offline"}},
+    {"expect_event": {"type": "message.created", "message.text": "First while offline"}, "within": 20},
+    {"expect_event": {"type": "message.created", "message.text": "Second while offline"}},
+    {"server": "assistant_replies", "args": {"conversation_id": "$conversation", "text": "Welcome back."}},
+    {"expect_event": {"type": "message.created", "message.from": "assistant", "message.text": "Welcome back."}},
+    {"op": "history", "args": {"conversation_id": "$conversation"}, "expect_result": {"messages.length": 4, "messages.1.text": "First while offline", "messages.2.text": "Second while offline"}},
+    {"expect_no_duplicates": true},
+    {"op": "shutdown"}
+  ]
+}
