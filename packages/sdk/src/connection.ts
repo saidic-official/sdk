@@ -20,13 +20,15 @@ const IDS_REMEMBERED = 500;
 
 // THE APP SOCKET'S REFUSALS (protocol v1, 51.6 as amended): the server accepts, then
 // closes with a code in the 4000s and a one-word reason. 4401 the token refused (the
-// verifier's reason), 4404 the API not open to the business, 4429 too_many_uses. Every
+// verifier's reason), 4403 plan_limit (the business's plan does not allow the API, as
+// REST's 403 plan_limit), 4404 the API not open to the business, 4429 too_many_uses. Every
 // one is final but 4401 expired, which asks the app for a token once; a 4xxx this version
 // does not know is final too. Any other close, and a failed handshake, is the network:
 // it opens again, later each time.
 const TOKEN_REFUSED = 4401;
 const FINAL_CODES: Record<number, string> = {
   4401: 'unauthorized',
+  4403: 'plan_limit',
   4404: 'not_open',
   4429: 'too_many_uses',
 };

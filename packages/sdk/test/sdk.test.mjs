@@ -274,6 +274,7 @@ test('every close in the 4000s is final, a code the SDK does not know as well; o
   const fake = await startFake();
   try {
     for (const [code, reason, expected] of [
+      [4403, 'plan_limit', 'plan_limit'],
       [4404, 'not_open', 'not_open'],
       [4499, 'something_new', 'refused'],
     ]) {
