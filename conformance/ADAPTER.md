@@ -25,7 +25,7 @@ and never reads as protocol.
 The first line the adapter writes, before it is told anything, says which SDK it drives:
 
 ```json
-{ "ready": { "sdk": "@saidic/sdk@0.1.0" } }
+{"ready": {"sdk": "@saidic/sdk@0.1.0"}}
 ```
 
 The adapter never receives a secret or an API key. It holds what an app holds: the
@@ -37,39 +37,20 @@ customer's tokens, each asked of the runner when the SDK asks the app for one (s
 Each request has an id the runner chooses, an operation and its arguments:
 
 ```json
-{ "id": 7, "op": "send", "args": { "conversation_id": 12, "text": "Where is my order?" } }
+{"id": 7, "op": "send", "args": {"conversation_id": 12, "text": "Where is my order?"}}
 ```
 
 The adapter answers each request once, by the same id, in whatever order the work
 finishes (a send held by the offline queue is answered when it goes):
 
 ```json
-{
-  "id": 7,
-  "ok": true,
-  "result": {
-    "id": 340,
-    "seq": 340,
-    "from": "customer",
-    "text": "Where is my order?",
-    "created_at": "...",
-    "status": "accepted"
-  }
-}
+{"id": 7, "ok": true, "result": {"id": 340, "seq": 340, "from": "customer", "text": "Where is my order?", "created_at": "...", "status": "accepted"}}
 ```
 
 or, when the SDK refused or the server did, the SDK's error as the app would read it:
 
 ```json
-{
-  "id": 7,
-  "ok": false,
-  "error": {
-    "code": "conversation_closed",
-    "status": 409,
-    "message": "This conversation is closed."
-  }
-}
+{"id": 7, "ok": false, "error": {"code": "conversation_closed", "status": 409, "message": "This conversation is closed."}}
 ```
 
 `code` is the server's fixed word (or the SDK's own, such as `offline` or `closed`),
@@ -79,20 +60,20 @@ runner asserts `code`, and `fields` for `invalid_request`.
 
 The operations:
 
-| op               | args                                                   | result                                                                                                                                                                                                             |
-| ---------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `init`           | `base_url`, `ws_url`, `business_id`, `adapter_name`    | `{}`: the SDK's client is made; its tokens are asked of the runner                                                                                                                                                 |
-| `start`          | `language?`, `context?`, `text?`                       | `{conversation_id, message?}`: a new conversation of the customer's, with its first message where `text` was given                                                                                                 |
-| `open`           | `conversation_id`                                      | `{}`: the conversation is followed in real time (the SDK's connection, subscribed)                                                                                                                                 |
-| `send`           | `conversation_id`, `text`, `idempotency_key?`, `wait?` | the message the server took: `id`, `seq` and the rest; with `wait: false`, `{queued: true}` at once, the message going when the SDK sends it (a send the offline queue holds, so the runner can go on to `online`) |
-| `history`        | `conversation_id`, `after?`, `before?`, `limit?`       | `{messages, has_more}`, as the REST route answers                                                                                                                                                                  |
-| `list`           | `cursor?`                                              | `{conversations, next_cursor}`: the customer's conversations, a page                                                                                                                                               |
-| `request_person` | `conversation_id`                                      | `{}`: the business's team is asked for                                                                                                                                                                             |
-| `close`          | `conversation_id`                                      | the closed conversation                                                                                                                                                                                            |
-| `drop_socket`    | none                                                   | `{}`: the socket under the SDK is lost, as a network loss would lose it; the SDK opens it again by itself                                                                                                          |
-| `offline`        | none                                                   | `{}`: the network is gone (requests fail, the socket is lost and cannot open)                                                                                                                                      |
-| `online`         | none                                                   | `{}`: the network is back, and the platform says so                                                                                                                                                                |
-| `shutdown`       | none                                                   | `{}`: the SDK's client is closed; the adapter then ends                                                                                                                                                            |
+| op | args | result |
+| --- | --- | --- |
+| `init` | `base_url`, `ws_url`, `business_id`, `adapter_name` | `{}`: the SDK's client is made; its tokens are asked of the runner |
+| `start` | `language?`, `context?`, `text?` | `{conversation_id, message?}`: a new conversation of the customer's, with its first message where `text` was given |
+| `open` | `conversation_id` | `{}`: the conversation is followed in real time (the SDK's connection, subscribed) |
+| `send` | `conversation_id`, `text`, `idempotency_key?` | the message the server took: `id`, `seq` and the rest |
+| `history` | `conversation_id`, `after?`, `before?`, `limit?` | `{messages, has_more}`, as the REST route answers |
+| `list` | `cursor?` | `{conversations, next_cursor}`: the customer's conversations, a page |
+| `request_person` | `conversation_id` | `{}`: the business's team is asked for |
+| `close` | `conversation_id` | the closed conversation |
+| `drop_socket` | none | `{}`: the socket under the SDK is lost, as a network loss would lose it; the SDK opens it again by itself |
+| `offline` | none | `{}`: the network is gone (requests fail, the socket is lost and cannot open) |
+| `online` | none | `{}`: the network is back, and the platform says so |
+| `shutdown` | none | `{}`: the SDK's client is closed; the adapter then ends |
 
 `base_url` is the API's address as an app would give it to the SDK; `ws_url` is the
 socket's address the runner expects the SDK to use, which an adapter whose SDK derives it
@@ -110,14 +91,7 @@ Every event the SDK hands the app, as the app sees it, with the SDK's own name f
 runner asserts the order without trusting the timing of lines:
 
 ```json
-{
-  "event": {
-    "type": "message.created",
-    "conversation_id": 12,
-    "message": { "id": 341, "seq": 341, "from": "assistant", "text": "..." },
-    "at": 18234.5
-  }
-}
+{"event": {"type": "message.created", "conversation_id": 12, "message": {"id": 341, "seq": 341, "from": "assistant", "text": "..."}, "at": 18234.5}}
 ```
 
 The connection's own state is an event too (`connection.state`, with `state`).
@@ -128,7 +102,7 @@ close code and the one-word reason; a refusal with no close (the app could give 
 has `code` null:
 
 ```json
-{ "ended": { "code": 4401, "reason": "bad_signature" } }
+{"ended": {"code": 4401, "reason": "bad_signature"}}
 ```
 
 ## Tokens
@@ -136,13 +110,13 @@ has `code` null:
 When the SDK asks the app for a token, the adapter asks the runner:
 
 ```json
-{ "ask": "token", "ask_id": 3 }
+{"ask": "token", "ask_id": 3}
 ```
 
 and the runner answers by the same number, with a token or with null to give none:
 
 ```json
-{ "answer": 3, "token": "eyJhbGciOiJIUzI1NiIs..." }
+{"answer": 3, "token": "eyJhbGciOiJIUzI1NiIs..."}
 ```
 
 The runner stages the token cases with this alone: an expired token (minted with its
