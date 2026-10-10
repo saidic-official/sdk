@@ -3,6 +3,15 @@
   "version": "0.1.0",
   "description": "Saidic for a business's own Node server: mint a signed-in customer's token, verify webhooks, manage customers. The secret and the key never leave the server.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saidic-official/sdk.git",
+    "directory": "packages/server"
+  },
+  "homepage": "https://docs.saidic.com",
+  "bugs": {
+    "url": "https://github.com/saidic-official/sdk/issues"
+  },
   "type": "module",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",

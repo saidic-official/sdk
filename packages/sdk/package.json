@@ -3,6 +3,15 @@
   "version": "0.1.0",
   "description": "Saidic's client for apps: a signed-in customer's conversations with a business's assistant, in real time. Browsers, React Native and Node 18 and up.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saidic-official/sdk.git",
+    "directory": "packages/sdk"
+  },
+  "homepage": "https://docs.saidic.com",
+  "bugs": {
+    "url": "https://github.com/saidic-official/sdk/issues"
+  },
   "type": "module",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",

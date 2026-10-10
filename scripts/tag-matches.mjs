@@ -13,6 +13,20 @@ if (!match) {
 const wanted = match[1];
 const read = name =>
   JSON.parse(readFileSync(new URL(`../packages/${name}/package.json`, import.meta.url), 'utf8'));
+// npm's provenance check refuses a package whose repository is not the GitHub repository
+// the workflow ran in (a 422 at the registry, which a dry run never reaches): asked here,
+// so a rehearsal fails on it too.
+const REPOSITORY = 'git+https://github.com/saidic-official/sdk.git';
+const misplaced = ['sdk', 'server']
+  .map(name => [name, read(name).repository || {}])
+  .filter(([name, at]) => at.url !== REPOSITORY || at.directory !== `packages/${name}`);
+if (misplaced.length) {
+  for (const [name, at] of misplaced)
+    console.error(
+      `packages/${name}: repository is ${JSON.stringify(at)}, not ${REPOSITORY} at packages/${name}`
+    );
+  process.exit(1);
+}
 const differ = ['sdk', 'server']
   .map(name => [read(name).name, read(name).version])
   .filter(([, version]) => version !== wanted);
