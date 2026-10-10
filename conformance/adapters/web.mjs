@@ -142,12 +142,17 @@ const OPS = {
     follow().subscribe([conversation_id]);
     return {};
   },
-  send: async ({ conversation_id, text, idempotency_key }) =>
-    needClient().messages.send(
+  send: async ({ conversation_id, text, idempotency_key, wait }) => {
+    const sending = needClient().messages.send(
       conversation_id,
       text,
       idempotency_key ? { idempotencyKey: idempotency_key } : {}
-    ),
+    );
+    if (wait !== false) return sending;
+    // Not waited for (a send the offline queue holds): answered now, sent when it goes.
+    sending.catch(error => log('a send not waited for failed:', error?.code ?? error));
+    return { queued: true };
+  },
   history: async ({ conversation_id, after, before, limit }) =>
     needClient().messages.list(conversation_id, { after, before, limit }),
   list: async ({ cursor }) => needClient().conversations.list(cursor ?? null),
