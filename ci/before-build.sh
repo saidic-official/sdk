@@ -14,5 +14,6 @@ run "lint" npm run lint
 run "format" npm run format:check
 run "build both packages" npm run build
 run "unit tests against the protocol's fake" npm test
+run "the conformance adapter against the protocol's fake" npm run conformance
 run "the SDK's size (at most 15 KB minified and compressed)" npm run size
 echo "BEFORE-BUILD PASSED"

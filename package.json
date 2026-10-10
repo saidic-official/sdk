@@ -11,9 +11,10 @@
     "build": "npm run build --workspaces",
     "test": "npm test --workspaces",
     "size": "node scripts/size.mjs",
-    "format": "prettier --write \"packages/*/src/**/*.ts\" \"packages/*/test/**/*.mjs\" \"scripts/**/*.mjs\"",
-    "format:check": "prettier --check \"packages/*/src/**/*.ts\" \"packages/*/test/**/*.mjs\" \"scripts/**/*.mjs\"",
-    "lint": "eslint packages/*/src scripts"
+    "format": "prettier --write \"packages/*/src/**/*.ts\" \"packages/*/test/**/*.mjs\" \"scripts/**/*.mjs\" \"conformance/**/*.mjs\"",
+    "format:check": "prettier --check \"packages/*/src/**/*.ts\" \"packages/*/test/**/*.mjs\" \"scripts/**/*.mjs\" \"conformance/**/*.mjs\"",
+    "lint": "eslint packages/*/src scripts conformance",
+    "conformance": "node --test conformance/adapters/*.test.mjs"
   },
   "devDependencies": {
     "@types/node": "22.7.5",
