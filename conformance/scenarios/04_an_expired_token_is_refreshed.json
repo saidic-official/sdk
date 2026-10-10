@@ -1,0 +1,13 @@
+{
+  "name": "An expired token is refreshed once",
+  "says": "The first token the app gives is expired: the SDK asks the app for a new one once and goes on; nothing ends.",
+  "steps": [
+    {"server": "tokens", "args": {"give": ["expired", "good"]}},
+    {"op": "init"},
+    {"op": "start", "args": {"text": "After a refresh"}, "save": {"conversation": "conversation_id"}},
+    {"op": "open", "args": {"conversation_id": "$conversation"}},
+    {"expect_event": {"type": "message.created", "message.text": "After a refresh"}},
+    {"expect_no_end": true},
+    {"op": "shutdown"}
+  ]
+}

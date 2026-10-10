@@ -1,0 +1,17 @@
+{
+  "name": "A person of the team takes over and hands back",
+  "says": "The customer asks for a person; a member of the team takes the conversation over (handover.started with their first name), writes (message.created from person), and hands it back (handover.ended).",
+  "steps": [
+    {"op": "init"},
+    {"op": "start", "args": {}, "save": {"conversation": "conversation_id"}},
+    {"op": "open", "args": {"conversation_id": "$conversation"}},
+    {"op": "request_person", "args": {"conversation_id": "$conversation"}},
+    {"server": "person_takes_over", "args": {"conversation_id": "$conversation"}},
+    {"expect_event": {"type": "handover.started"}},
+    {"server": "person_replies", "args": {"conversation_id": "$conversation", "text": "Hello, I can help."}},
+    {"expect_event": {"type": "message.created", "message.from": "person", "message.text": "Hello, I can help."}},
+    {"server": "person_hands_back", "args": {"conversation_id": "$conversation"}},
+    {"expect_event": {"type": "handover.ended"}},
+    {"op": "shutdown"}
+  ]
+}

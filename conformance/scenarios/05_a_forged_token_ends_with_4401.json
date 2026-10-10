@@ -1,0 +1,38 @@
+{
+  "name": "A forged token ends with 4401 and its reason",
+  "says": "A token signed with a wrong secret on a conversation of the customer's: the socket is accepted and closed 4401 bad_signature; the SDK reports the end once and does not open again.",
+  "steps": [
+    {
+      "server": "customer_conversation",
+      "save": "conversation"
+    },
+    {
+      "server": "tokens",
+      "args": {
+        "give": [
+          "forged"
+        ]
+      }
+    },
+    {
+      "op": "init"
+    },
+    {
+      "op": "open",
+      "args": {
+        "conversation_id": "$conversation"
+      },
+      "may_fail": true
+    },
+    {
+      "expect_ended": {
+        "code": 4401,
+        "reason": "bad_signature"
+      },
+      "within": 20
+    },
+    {
+      "op": "shutdown"
+    }
+  ]
+}
