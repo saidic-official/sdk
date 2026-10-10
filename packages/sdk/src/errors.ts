@@ -33,3 +33,12 @@ export class SaidicError extends Error {
 
 // The network could not be reached: the request may be tried again.
 export const OFFLINE = 'offline';
+
+// Answers that say "not now" rather than "no": a gateway or the server unavailable for a
+// moment (502, 503, 504, and Cloudflare's 520 to 524), the server's own 'unavailable', and
+// the network down. A message waits through them and is tried again, with its key.
+const PASSING = new Set([502, 503, 504, 520, 521, 522, 523, 524]);
+
+export const passing = (error: unknown): boolean =>
+  error instanceof SaidicError &&
+  (error.code === OFFLINE || error.code === 'unavailable' || PASSING.has(error.status));

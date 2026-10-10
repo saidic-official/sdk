@@ -17,6 +17,9 @@ export const startFake = async (options = {}) => {
     subscribes: [],
     // Fail the next n REST requests as if the network were down.
     dropNext: 0,
+    // Answer the next requests with these statuses first: 503 as the server's own
+    // 'unavailable', 502 as a gateway's page.
+    statusNext: [],
     mostSockets: options.mostSockets ?? 8,
     nextId: 1,
     nextSeq: 100,
@@ -60,6 +63,12 @@ export const startFake = async (options = {}) => {
       state.dropNext -= 1;
       req.socket.destroy();
       return;
+    }
+    if (state.statusNext.length) {
+      const status = state.statusNext.shift();
+      if (status === 503) return refuse(res, 503, 'unavailable', 'Try again shortly.');
+      res.writeHead(status, { 'Content-Type': 'text/html' });
+      return res.end('<html><body>Bad gateway</body></html>');
     }
     const token = tokenOf(req.headers.authorization);
     if (state.expired.has(token) || !state.good.has(token)) {

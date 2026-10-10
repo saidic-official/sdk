@@ -1,4 +1,4 @@
-import { OFFLINE, SaidicError } from './errors.js';
+import { SaidicError, passing } from './errors.js';
 import type { Message } from './types.js';
 
 type Waiting = {
@@ -13,7 +13,8 @@ const FIRST_WAIT_MS = 2000;
 const LONGEST_WAIT_MS = 30000;
 
 // THE OFFLINE QUEUE (protocol v1's rules for an SDK): a message sent while the network
-// is down waits here, in the order it was sent, and goes when the network is back, with
+// is down, or while the server or its gateway says "not now" (502, 503, 504, 520 to 524,
+// 'unavailable'), waits here, in the order it was sent, and goes when it is back, with
 // the idempotency key it was given at the first try, so a message the server took
 // before the answer was lost is never stored twice. A refusal (a closed conversation,
 // a message too long) ends that message alone; the rest go on in order.
@@ -58,7 +59,7 @@ export class SendQueue {
           this.wait = FIRST_WAIT_MS;
           next.resolve(message);
         } catch (error) {
-          if (error instanceof SaidicError && error.code === OFFLINE) {
+          if (passing(error)) {
             this.later(this.wait);
             this.wait = Math.min(this.wait * 2, LONGEST_WAIT_MS);
             return;

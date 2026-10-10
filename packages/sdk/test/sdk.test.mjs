@@ -241,3 +241,30 @@ test('a handler that throws stops neither the others nor the connection', async 
     await fake.stop();
   }
 });
+
+test('"not now" from the server or its gateway (503, 503, 502, then 200): kept, in order, one key, stored once', async () => {
+  const fake = await startFake();
+  try {
+    const saidic = client(fake);
+    const { id } = await saidic.conversations.start();
+    fake.state.statusNext = [503, 503, 502];
+    const first = saidic.messages.send(id, 'one', { idempotencyKey: 'key-passing-00000001' });
+    const second = saidic.messages.send(id, 'two');
+    const [a, b] = await Promise.all([first, second]);
+    assert.deepEqual([a.text, b.text], ['one', 'two']);
+    assert.ok(a.seq < b.seq, 'in the order they were sent');
+    const stored = (await saidic.messages.list(id)).messages.map(m => m.text);
+    assert.deepEqual(stored, ['one', 'two'], 'each stored once');
+    const tries = fake.state.requests.filter(([, , , key]) => key === 'key-passing-00000001');
+    assert.equal(tries.length, 4, 'three refusals, then taken: the same key each time');
+    // A refusal that is a "no" is not waited through.
+    fake.state.statusNext = [];
+    await saidic.conversations.close(id);
+    await assert.rejects(
+      saidic.messages.send(id, 'late'),
+      error => error.code === 'conversation_closed'
+    );
+  } finally {
+    await fake.stop();
+  }
+});
