@@ -1,5 +1,6 @@
-// The size check of section 51.8: @saidic/sdk, minified and compressed, is at most
-// 15 KB, as an app bundles it. Run by `npm run size` and the CI gate.
+// The size check (docs/architecture.md, section 10, @saidic/sdk): @saidic/sdk, minified
+// and compressed, is at most 15 KB, as an app bundles it. Run by `npm run size` and the
+// CI gate.
 import { build } from 'esbuild';
 import { gzipSync } from 'node:zlib';
 

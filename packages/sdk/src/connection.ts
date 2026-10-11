@@ -47,12 +47,13 @@ const KNOWN: EventName[] = [
 
 type Followed = { lastSeq: number | null; seen: Set<number>; control: Control | null };
 
-// THE APP SOCKET (protocol v1, section 51.6): the customer's conversations in real time.
-// On every open it subscribes again with the last seq it holds of each, and the server
-// catches it up with what was stored meanwhile; the handlers see each message once, in
-// the order of its seq. A ping every thirty seconds; a pong that names a later seq than
-// the one held asks to be caught up. Lost, it opens again by itself, later each time;
-// refused for its token, it asks the app for a new one, once.
+// THE APP SOCKET (protocol v1; docs/architecture.md, section 7, The app socket): the
+// customer's conversations in real time. On every open it subscribes again with the
+// last seq it holds of each, and the server catches it up with what was stored
+// meanwhile; the handlers see each message once, in the order of its seq. A ping every
+// thirty seconds; a pong that names a later seq than the one held asks to be caught up.
+// Lost, it opens again by itself, later each time; refused for its token, it asks the
+// app for a new one, once.
 export class Connection {
   private socket: SocketLike | null = null;
   private readonly followed = new Map<number, Followed>();

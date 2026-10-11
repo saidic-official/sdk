@@ -80,9 +80,10 @@ const checkFacts = (facts: Record<string, string>): void => {
   }
 };
 
-// THE TOKEN for a signed-in customer (sections 51.4 and 52.3): an HS256 JWT signed with
-// the business's identity secret, for the widget (data-identity, saidicIdentify) and for
-// an app (the SDK's token). What Saidic would refuse is refused here first.
+// THE TOKEN for a signed-in customer (docs/architecture.md, section 10, Identity
+// tokens): an HS256 JWT signed with the business's identity secret, for the widget
+// (data-identity, saidicIdentify) and for an app (the SDK's token). What Saidic would
+// refuse is refused here first.
 export const mintToken = (options: MintOptions): string => {
   const ttl = options.ttlSeconds ?? MOST_SECONDS;
   if (!Number.isInteger(ttl) || ttl <= 0 || ttl > MOST_SECONDS) {
