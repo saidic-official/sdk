@@ -1,4 +1,5 @@
-// The web adapter (ADAPTER.md) against the SDK package's fake of protocol v1, driven by
+// The web adapter (docs/architecture.md, section 10) against the SDK package's fake of protocol
+// v1, driven by
 // a runner of a few lines: the ready line first, init, a token asked and given, start,
 // open with an event line and its time, send, the socket lost and caught up again from
 // the last seq, the network down and back with a message waiting, and an error line in
@@ -41,7 +42,7 @@ const runner = tokens => {
   return { adapter, lines, ask, events };
 };
 
-test('the web adapter drives the SDK as ADAPTER.md has it', async () => {
+test('the web adapter drives the SDK as the adapter contract has it', async () => {
   const fake = await startFake({ tokens: ['tok-1'] });
   const run = runner(['tok-1']);
   try {

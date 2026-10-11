@@ -34,7 +34,8 @@ CLAUDE.local.md exists in this folder or above it: never add one.
   seconds, which the web SDK does not do since it holds a socket. Why: the server pins
   these in section 51.6.
 - Every SDK passes the conformance suite (`conformance/scenarios`, the runner in the
-  backend's tests) through an adapter written to `conformance/ADAPTER.md`; an operation
+  backend's tests) through an adapter written to the contract in the monorepo's
+  `docs/architecture.md`, section 10; an operation
   an SDK cannot do is a skip named as that SDK's gap, never a pass. A mobile SDK is
   added by writing its adapter and nothing else. Why: one suite, every SDK.
 - A change to a frame, an event or a close begins in the docs' registry and the

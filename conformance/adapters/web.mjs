@@ -1,4 +1,5 @@
-// THE WEB SDK'S CONFORMANCE ADAPTER (ADAPTER.md): @saidic/sdk, as built, driven by the
+// THE WEB SDK'S CONFORMANCE ADAPTER (docs/architecture.md, section 10): @saidic/sdk, as built,
+// driven by the
 // runner over JSON lines on standard input and output. It does what an app does with the
 // SDK and nothing more; where an operation has no SDK call (the network lost or back),
 // it does what the platform would: the socket under the SDK is lost, requests fail, and

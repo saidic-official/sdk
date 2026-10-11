@@ -1,5 +1,6 @@
 """The conformance runner (sections 51.7 and 51.12): every scenario of scenarios/*.json,
-through an SDK's adapter (ADAPTER.md), against the real backend in a test environment.
+through an SDK's adapter (docs/architecture.md, section 10), against the real backend in a test
+environment.
 
     python sdk/conformance/runner.py --adapter "node sdk/conformance/adapters/web.mjs"
     python sdk/conformance/runner.py                 # the backend's trivial adapter
