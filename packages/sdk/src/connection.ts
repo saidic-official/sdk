@@ -192,7 +192,10 @@ export class Connection {
 
   private again(): void {
     this.setState('reconnecting');
-    const wait = this.retryIn * (0.8 + Math.random() * 0.4);
+    // Full jitter: anywhere between no wait and twice the step (0 to 2 s the first time),
+    // the same wait on average, so that every app cut off at once (a server restart, a
+    // network gone for all) does not come back in the same instant.
+    const wait = Math.random() * this.retryIn * 2;
     this.retryIn = Math.min(this.retryIn * 2, LONGEST_RETRY_MS);
     this.retry = setTimeout(() => void this.open(), wait);
   }
