@@ -24,6 +24,19 @@ export interface Message {
   choices?: { id: string; label: string }[];
   // Present on the answer to a send: the server took the message.
   status?: 'accepted';
+  // The knowledge items an assistant reply was written from, fixed when it was stored;
+  // an empty list on every other message.
+  based_on: BasedOn[];
+}
+
+// One knowledge item a reply was written from. Only its title goes out, never its text.
+export interface BasedOn {
+  id: string;
+  kind: 'profile' | 'about' | 'note' | 'file' | 'qa' | 'pushed';
+  // As it was when the reply was stored.
+  title: string;
+  // True once the item has been deleted.
+  removed: boolean;
 }
 
 export interface Control {
