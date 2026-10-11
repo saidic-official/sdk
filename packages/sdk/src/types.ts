@@ -1,7 +1,7 @@
-// The public protocol's shapes (protocol v1, sections 51.5 and 51.6 of the plan, with
-// 52.3's names): what the REST routes answer and what the socket sends. A field the SDK
-// does not know is kept as it came; an event type it does not know is ignored, so the
-// server may add both inside v1.
+// The public protocol's shapes (protocol v1; docs/architecture.md, section 10, The
+// public API, the SDKs and identity): what the REST routes answer and what the socket
+// sends. A field the SDK does not know is kept as it came; an event type it does not
+// know is ignored, so the server may add both inside v1.
 //
 // ONE NAMING RULE: what the server sends keeps the server's names, as the protocol
 // document writes them (has_more, next_cursor, conversation_id, created_at); what is the

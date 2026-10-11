@@ -1,7 +1,8 @@
 # The conformance adapter
 
-The conformance suite proves an SDK against the real protocol (protocol v1, sections 51.6
-and 51.7 of the plan). It has three parts:
+The conformance suite proves an SDK against the real protocol (protocol v1;
+docs/architecture.md, section 10, The public API, the SDKs and identity). It has three
+parts:
 
 - the scenarios, `sdk/conformance/scenarios/*.json`, written in the names below;
 - the runner, `sdk/conformance/runner.py`, which starts the real backend in a test
