@@ -51,3 +51,12 @@ CLAUDE.local.md exists in this folder or above it: never add one.
   rejects a change that should have and did not. Why: the owner uploads the guide into
   Saidic's own Knowledge so its assistant answers about Saidic, and a guide that lags
   the product tells customers what is not true.
+
+## The architecture document
+
+- A change to how something works updates its section of the monorepo's
+  `docs/architecture.md` in the same change; a new feature is first described under "In
+  view" there and moves into the body when it is built; the code reviewer rejects a change
+  that should have and did not.
+  Why: the document is the one account of what Saidic is today and why each decision was
+  made, and an account that lags the code misleads every agent and person who reads it.
