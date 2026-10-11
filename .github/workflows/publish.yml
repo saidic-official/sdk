@@ -4,8 +4,15 @@
 #   v0.1.0-rehearsal   the same steps with npm's dry run: nothing is published
 #
 # The tag must name the version both package.json files carry (scripts/tag-matches.mjs);
-# every check the SDK's own pipeline runs (ci/before-build.sh) passes first. The npm
-# token is the repository's NPM_TOKEN secret; provenance needs the id-token permission.
+# every check the SDK's own pipeline runs (ci/before-build.sh) passes first. Provenance
+# and npm's trusted publishing both need the id-token permission.
+#
+# TRUSTED PUBLISHING (release6, the orchestrator's order of 11 October 2026): npm 11.5.1
+# and later publish by this workflow's own OpenID Connect identity, with no token, for a
+# package whose trusted publisher on npmjs.com names it (organisation saidic-official,
+# repository sdk, workflow publish.yml; set on each package's Settings page by the
+# owner). Where none is set it falls back to the repository's NPM_TOKEN secret. Once a
+# release has gone out by trusted publishing, the token and its line below are removed.
 name: publish
 
 on:
@@ -32,6 +39,10 @@ jobs:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
+      # Trusted publishing needs npm 11.5.1 or later; Node 22 brings npm 10.
+      - name: npm that publishes by the workflow's own identity
+        run: npm install -g npm@11.6.2
+
       - name: The tag names both packages' version
         run: node scripts/tag-matches.mjs "$GITHUB_REF_NAME"
 
@@ -40,6 +51,7 @@ jobs:
 
       - name: Publish @saidic/sdk and @saidic/server
         env:
+          # Used only where no trusted publisher is set for a package (see the top).
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -euo pipefail
