@@ -41,3 +41,13 @@ CLAUDE.local.md exists in this folder or above it: never add one.
   protocol page, then the server, then the SDK. Why: the registry tests hold all three
   to one list.
 - The packages are MIT. Why: the licence the owner chose.
+
+## The product guide
+
+- Any change a user could notice (a page, tab, button, field, setting, limit, message,
+  e-mail, alert, widget state, role, endpoint, event or SDK method added, changed or
+  removed) updates the monorepo's `backend/knowledge-base/inventory.md` and
+  `backend/knowledge-base/saidic-knowledge.md` in the same change, and the code reviewer
+  rejects a change that should have and did not. Why: the owner uploads the guide into
+  Saidic's own Knowledge so its assistant answers about Saidic, and a guide that lags
+  the product tells customers what is not true.
